@@ -31,20 +31,81 @@ def GammaTransformation(image, gamma):
 	output_imgae = 255 * np.power(image_cp.astype(int) / 255, gamma)
 	return output_imgae
 
+def CalDistance(pointleft, pointright):
+    distance = math.pow(math.pow(pointleft[0] - pointright[0], 2) + math.pow(pointleft[1] - pointright[1], 2), 0.5)
+    return distance
+# %%
+def CalAround(pointleft, pointright, length):
+    distance = CalDistance(pointleft, pointright)
+    return math.acos(distance / length) * 180 / 3.14
+# %%
+def CalLeftRight(pointleft, pointright):
+    return math.atan2(pointright[1] - pointleft[1], pointright[0] - pointleft[0]) * 180 / 3.14
+
+# %%
+def CalUpDown(pointup, pointdown, length):
+    distance = abs(pointdown[1] - pointup[1])
+    return math.asin(distance / length) * 180 / 3.14
+# %%
+def CalCenter(pointgroup):
+    x = y = n = 0
+    for point in pointgroup:
+        x += point[0]
+        y += point[1]
+        n += 1
+    return (x / n, y / n)
+# %%
+def CalAroundLength(pointgroup):
+    length = 0
+    p = pointgroup[0]
+    flag = 0
+    for point in pointgroup:
+        if flag == 1:
+            plen = CalDistance(p, point)
+            length = length + plen
+
+        else:
+            flag = 1
+    return length
+
+# %%
+# imagefirst = face_recognition.load_image_file("./image/IMG_2100.jpg")
+def ImageShow(imagefirst):
+    imagelist = face_recognition.face_landmarks(imagefirst)
+    # print(imagelist)
+    if (len(imagelist) == 0):
+        return
+    else:
+        pil_image = Image.fromarray(imagefirst)
+
+        lengtheyes = (CalAroundLength(imagelist[0]['left_eye']) + CalAroundLength(imagelist[0]['right_eye'])) / 2
+        rate = 1
+
+        global eyelen
+        if eyelen == 0:
+            eyelen = lengtheyes
+        else:
+            rate = lengtheyes / eyelen
+
+        print('eye_length:{}'.format(CalDistance(line[0], line[1]) / rate))
+        print('nose_length:{}'.format(CalDistance(line2[0], line2[1]) / rate))
+        print('around:{}'.format(CalLeftRight(line[0], line[1])))
+
+        # img = cv2.cvtColor(np.asarray(pil_image),cv2.COLOR_RGB2BGR)  
+        # out.write(img)
+
+        # pil_image.show()
+
+        return pil_imag
+
 # %%
 def FaceRecognize(know_im, imagefirst):
     # know_im = face_recognition.load_image_file("./image/image_true/doggy_true.jpg")
     know_encodings = face_recognition.face_encodings(know_im)
     first_encodings = face_recognition.face_encodings(imagefirst)
-    global numofall
-    numofall = numofall + 1
     if len(know_encodings) == 0:
-        global numoftrue
-        numoftrue = numoftrue + 1
         return 'Error, no person in know_encoding'
     elif len(first_encodings) == 0:
-        global numofimage
-        numofimage = numofimage + 1
         return 'Error, no person in this image'
     else:
         return face_recognition.compare_faces([know_encodings[0]], first_encodings[0])[0]
@@ -60,23 +121,24 @@ else:
     gamma = CalGamma(JudgeBrightness(gray))
     img_gamma = GammaTransformation(imagefirst, gamma)
     print(str(FaceRecognize(know_im, np.uint8(img_gamma))))
+    ImageShow(np.uint8(img_gamma))
 
 # %%
-try:
-    frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-except Exception as e:
-	print(e)
+# try:
+#     frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+# except Exception as e:
+# 	print(e)
 
 # %%
-try:
-    pil_image = Image.fromarray(frame)
-    img = cv2.cvtColor(np.asarray(pil_image),cv2.COLOR_RGB2BGR)
-    # pil_image = Image.fromarray(img)
-    # p
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gamma = CalGamma(JudgeBrightness(gray))
-    frame = GammaTransformat
-    ImageShow(np.uint8(frame))
-    print(FaceRecognize(know_im, np.uint8(frame)))
-except Exception as e:
-    print(e)
+# try:
+#     pil_image = Image.fromarray(frame)
+#     img = cv2.cvtColor(np.asarray(pil_image),cv2.COLOR_RGB2BGR)
+#     # pil_image = Image.fromarray(img)
+#     # p
+#     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     gamma = CalGamma(JudgeBrightness(gray))
+#     frame = GammaTransformat
+#     ImageShow(np.uint8(frame))
+#     print(FaceRecognize(know_im, np.uint8(frame)))
+# except Exception as e:
+#     print(e)
