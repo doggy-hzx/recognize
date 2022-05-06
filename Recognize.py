@@ -76,27 +76,41 @@ def ImageShow(imagefirst):
     if (len(imagelist) == 0):
         return
     else:
-        pil_image = Image.fromarray(imagefirst)
+        imgroup = []
+        for im in imagelist:
+            # pil_image = Image.fromarray(im)
+            lengtheyes = (CalAroundLength(im['left_eye']) + CalAroundLength(im['right_eye'])) / 2
+            rate = 1
 
-        lengtheyes = (CalAroundLength(imagelist[0]['left_eye']) + CalAroundLength(imagelist[0]['right_eye'])) / 2
-        rate = 1
+            # global eyelen
+            # if eyelen == 0:
+            #     eyelen = lengtheyes
+            # else:
+            #     rate = lengtheyes / eyelen
 
-        global eyelen
-        if eyelen == 0:
-            eyelen = lengtheyes
-        else:
-            rate = lengtheyes / eyelen
 
-        print('eye_length:{}'.format(CalDistance(line[0], line[1]) / rate))
-        print('nose_length:{}'.format(CalDistance(line2[0], line2[1]) / rate))
-        print('around:{}'.format(CalLeftRight(line[0], line[1])))
+            line = []
+            line.append(CalCenter(im['left_eye']))
+            line.append(CalCenter(im['right_eye']))
 
+            line2 = []
+            line2.append(im['nose_bridge'][0])
+            line2.append(im['nose_bridge'][len(im['nose_bridge']) - 1])
+
+            imgg = []
+            imgg.append(CalDistance(line[0], line[1]))
+            imgg.append(CalDistance(line2[0], line2[1]))
+            imgg.append(CalLeftRight(line[0], line[1]))
+            # print('eye_length:{}'.format(CalDistance(line[0], line[1])))
+            # print('nose_length:{}'.format(CalDistance(line2[0], line2[1])))
+            # print('around:{}'.format(CalLeftRight(line[0], line[1])))
+            imgroup.append(imgg)
         # img = cv2.cvtColor(np.asarray(pil_image),cv2.COLOR_RGB2BGR)  
         # out.write(img)
 
         # pil_image.show()
 
-        return pil_imag
+        return imgroup
 
 # %%
 def FaceRecognize(know_im, imagefirst):
@@ -108,8 +122,18 @@ def FaceRecognize(know_im, imagefirst):
     elif len(first_encodings) == 0:
         return 'Error, no person in this image'
     else:
-        return face_recognition.compare_faces([know_encodings[0]], first_encodings[0])[0]
-
+        trueandfalse = []
+        for first_encode in first_encodings:
+            flag = 0
+            for know_encode in know_encodings:
+                if face_recognition.compare_faces([know_encode], first_encode)[0]:
+                    flag = 1
+            if flag == 0:
+                trueandfalse.append("false")
+            else:
+                trueandfalse.append("true")
+        # return face_recognition.compare_faces([know_encodings[0]], first_encodings[0])[0]
+        return trueandfalse
 # %%
 try:
     know_im = face_recognition.load_image_file('./image/photo.png')
@@ -121,7 +145,7 @@ else:
     gamma = CalGamma(JudgeBrightness(gray))
     img_gamma = GammaTransformation(imagefirst, gamma)
     print(str(FaceRecognize(know_im, np.uint8(img_gamma))))
-    ImageShow(np.uint8(img_gamma))
+    print(ImageShow(np.uint8(img_gamma)))
 
 # %%
 # try:
